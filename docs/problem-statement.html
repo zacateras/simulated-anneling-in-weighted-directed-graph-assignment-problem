@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      .smallcaps{font-variant: small-caps;}
+      .line-block{white-space: pre-line;}
+      .column{display: inline-block;}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h2 id="simulated-annealing-for-weighted-directed-graph-assignment-problem">Simulated annealing for weighted directed graph assignment problem</h2>
+<h3 id="problem-statement">Problem statement</h3>
+<p>The assignment problem is commonly explained with an example - as a problem of finding optimal allocation of <span class="math inline">\(n\)</span> workers over <span class="math inline">\(m\)</span> jobs. Two different workers cannot be allocated over the same job and one worker cannot be do more than one job. Each assignment of a worker to a job has defined its cost / profit <span class="math inline">\(c\)</span>. The goal of the task is to minimize the total cost or maximize the total profit <span class="math inline">\(U\)</span>. Depending on the cardinality of both sets, different models can be considered:</p>
+<ul>
+<li>if no. of workers exceeds no. of jobs: <span class="math inline">\(n \ge m\)</span>
+<ul>
+<li><span class="math inline">\(U(x) = \sum_{i=1}^{m}\sum_{j=1}^{n}c_{ij}x_{ij} \to min|max\)</span></li>
+<li><span class="math inline">\(\sum_{i=1}^{n}x_{ij} = 1, i = 1,2,...m\)</span></li>
+<li><span class="math inline">\(\sum_{i=1}^{m}x_{ij} \le 1, j = 1,2...n\)</span></li>
+<li><span class="math inline">\(x_{ij} \in \{1, 2\}, i = 1,2...n, j = 1,2...m\)</span></li>
+</ul></li>
+<li>if n &lt; m - no. of workers is under no. of jobs
+<ul>
+<li><span class="math inline">\(U(x) = \sum_{i=1}^{m}\sum_{j=1}^{n}c_{ij}x_{ij} \to min|max\)</span></li>
+<li><span class="math inline">\(\sum_{i=1}^{n}x_{ij} \le 1, i = 1,2,...m\)</span></li>
+<li><span class="math inline">\(\sum_{i=1}^{m}x_{ij} = 1, j = 1,2...n\)</span></li>
+<li><span class="math inline">\(x_{ij} \in \{1, 2\}, i = 1,2...n, j = 1,2...m\)</span></li>
+</ul></li>
+</ul>
+<p>The problem can be presented graphically as follows:</p>
+<figure>
+<img src="workers_jobs.png" alt="Workers - jobs allocation" /><figcaption>Workers - jobs allocation</figcaption>
+</figure>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>Design and implement a program solving simulated anneling algorithm,</li>
+<li>Test various temperature ranges,</li>
+<li>Test different temperature cooling schedules:
+<ul>
+<li>exponential: <span class="math inline">\(T(t) = T_0 * a ^ t\)</span></li>
+<li>linear: <span class="math inline">\(T(t) = T_0 + a * t\)</span></li>
+<li>logarithmic: <span class="math inline">\(T(t) = c / log(t + d)\)</span></li>
+</ul></li>
+<li>Test graphs of different sizes and structures <span class="math inline">\(n \gt m\)</span>, <span class="math inline">\(n = m\)</span>, <span class="math inline">\(n \lt m\)</span>,</li>
+<li>Visualize learning performance.</li>
+</ul>
+<h3 id="solution-concept">Solution concept</h3>
+<h4 id="assumptions">Assumptions</h4>
+<ul>
+<li>Edge costs are held in two dimensional table, where the first dimension denotes vertex indices from bipartite graph part with lower cardinality (<em>LP</em>) and the second indices from part of higher cardinality (<em>HP</em>).</li>
+<li>The graph is a complete bipartite one. Edges missing in input file are replaced with <span class="math inline">\(+inf\)</span> weights (for minimization problem, <span class="math inline">\(-inf\)</span> weights in case of maximization).</li>
+<li><p><span class="math inline">\(x\)</span> is represented by a permutation of vertex indices <span class="math inline">\(\in HP\)</span>:</p>
+<pre><code>  Let:          |LP| = 4, |HP| = 6
+
+  Solution:     [ 1 4 2 5 ]
+  Remaining:    { 3, 6 }</code></pre></li>
+<li><p>Neighbour <span class="math inline">\(x\)</span> is computed by choosing a random index from solution <span class="math inline">\(\in HP\)</span> and replacing it by other random index <span class="math inline">\(\in HP\)</span>. No matter if it is in the solution or in the remaining set.</p></li>
+</ul>
+<h4 id="algorithm">Algorithm</h4>
+<ol type="1">
+<li><span class="math inline">\(t = t_{max}\)</span><br /> choose random <span class="math inline">\(x_{current}\)</span></li>
+<li>choose <span class="math inline">\(x_{next}\)</span> from <span class="math inline">\(x_{current}\)</span> neighbourhood<br /> if <span class="math inline">\(U(x_{next})\)</span> is better than <span class="math inline">\(U(x_{current})\)</span> than <span class="math inline">\(x_{current}:=x_{next}\)</span><br /> else if <span class="math inline">\(rand(0,1) &gt; e^{-\delta U/t}\)</span> than <span class="math inline">\(x_{current}:=x_{next}\)</span><br /> repeat step 2. <span class="math inline">\(k_t\)</span> times</li>
+<li>t = T(t)<br /> if <span class="math inline">\(t \gt t_{min}\)</span> then goto step 2.<br /> else goto step 1.</li>
+</ol>
+<h3 id="references">References</h3>
+<ul>
+<li>http://www.fys.ku.dk/~andresen/BAhome/ownpapers/permanents/annealSched.pdf</li>
+<li>http://zzsw.zut.edu.pl/download/AB/5%20problemy%20przydzialu.pdf</li>
+<li>http://www.mini.pw.edu.pl/~januszwa/zad5.pdf</li>
+</ul>
+</body>
+</html>
