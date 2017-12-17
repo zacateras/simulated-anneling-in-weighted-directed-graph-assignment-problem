@@ -55,6 +55,9 @@ class CoolingSchemeLogarithmic(CoolingScheme):
     Can be parametrized with c and d parameters.
     """
     def __init__(self, c, d):
+        if c <= 0:
+            raise (Exception, 'C must be a number greater than zero.')
+
         self.C = c
         self.D = d
 
@@ -108,10 +111,12 @@ class SimulatedAnnealingResult:
     The solution graph can be drawn using draw_solution method.
     Learning curve can be plotted using draw_observations_plot method.
     """
-    def __init__(self, solution, total_time, observations):
-        self.solution = solution;
-        self.total_time = total_time;
-        self.observations = observations;
+    def __init__(self, solution, total_time, observations, max_i_s2, max_i_s3):
+        self.solution = solution
+        self.total_time = total_time
+        self.observations = observations
+        self.max_i_s2 = max_i_s2
+        self.max_i_s3 = max_i_s3
 
     def draw_solution(self):
         self.solution.draw()
@@ -175,11 +180,14 @@ class SimulatedAnnealing:
 
                 next_s = crnt_s.get_neighbour()
                 next_est = next_s.get_estimate()
-                
+
+                # prevent overflows
+                e_d = (next_est - crnt_est) / t
+
                 if next_est < crnt_est:
                     crnt_s = next_s
                     crnt_est = next_est
-                elif random.random() > math.exp((next_est - crnt_est) / t):
+                elif e_d < 709 and random.random() > math.exp(e_d):
                     crnt_s = next_s
                     crnt_est = next_est
 
@@ -210,4 +218,4 @@ class SimulatedAnnealing:
         end_time = time.time()
         total_time = end_time - start_time
 
-        return SimulatedAnnealingResult(crnt_s, total_time, observations)
+        return SimulatedAnnealingResult(crnt_s, total_time, observations, i_s2, i_s3)

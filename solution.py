@@ -72,30 +72,32 @@ class Solution:
         """
         Randomly changes an edge in the solution.
         """
-        idx_1, idx_2 = random.sample(range(0, self.g_part_len - 1), 2)
-        self.__change_edge(idx_1, idx_2)
+        idx_g = 0
+        idx_l = 0
+        while idx_g == idx_l:
+            idx_g = random.randint(0, self.g_part_len - 1)
+            idx_l = random.randint(0, self.l_part_len - 1)
 
-    def __change_edge(self, idx_1, idx_2):
+        self.__change_edge(idx_g, idx_l)
+
+    def __change_edge(self, idx_g, idx_l):
         """
         If vertices[idx_1] and vertices[idx_2] are connected then swaps its edges.
         If only one of them is connected than connecting edge is removed and vertices[idx_1]:vertices[idx_2] edge added.
         If both are disconnected then does not change edges state.
         """
-        if idx_1 > self.g_part_len:
+        if idx_g > self.g_part_len:
             raise (Exception, 'Index 1 must be lower than the number of vertices in greater bipartite.')
 
-        if idx_2 > self.g_part_len:
-            raise (Exception, 'Index 2 must be lower than the number of vertices in greater bipartite.')
+        if idx_l > self.l_part_len:
+            raise (Exception, 'Index 2 must be lower than the number of vertices in lesser bipartite.')
 
-        v_1 = self.solution[idx_1] if idx_1 < self.l_part_len else self.remaining[idx_1 - self.l_part_len]
-        v_2 = self.solution[idx_2] if idx_2 < self.l_part_len else self.remaining[idx_2 - self.l_part_len]
+        v_g = self.solution[idx_g] if idx_g < self.l_part_len else self.remaining[idx_g - self.l_part_len]
+        v_l = self.solution[idx_l]
 
-        if idx_2 < self.l_part_len:
-            self.solution[idx_2] = v_1
+        if idx_g < self.l_part_len:
+            self.solution[idx_g] = v_l
+            self.solution[idx_l] = v_g
         else:
-            self.remaining[idx_2 - self.l_part_len] = v_1
-
-        if idx_1 < self.l_part_len:
-            self.solution[idx_1] = v_2
-        else:
-            self.remaining[idx_1 - self.l_part_len] = v_2
+            self.remaining[idx_g - self.l_part_len] = v_l
+            self.solution[idx_l] = v_g
