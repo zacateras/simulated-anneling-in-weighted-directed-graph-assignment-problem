@@ -3,12 +3,18 @@ import random
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from src import random_seed
+import random_seed
 
 
 class Graph:
+    """
+    Helper methods for networkx.Graph class.
+    """
     @staticmethod
     def draw_bipartite(nx_graph: nx.Graph, vertex_tuples=None):
+        """
+        Draws bipartite either the provided weighted graph or the assignment solution if only vertex_tuples collection is provided.
+        """
         if not nx.is_bipartite(nx_graph):
             raise (Exception, 'Provided graph must be bipartite.')
 
@@ -51,6 +57,9 @@ class Graph:
 
     @staticmethod
     def subgraph_edges(nx_graph: nx.Graph, vertex_tuples):
+        """
+        Returns subgraph of the provided graph containing only edges provided as vertex_tuples collection.
+        """
         nx_subgraph = nx.empty_graph(len(nx_graph))
 
         for vertex_tuple in vertex_tuples:
@@ -65,6 +74,13 @@ class Graph:
 
     @staticmethod
     def random_bipartite(n, m, w_min, w_max):
+        """
+        Generates random weighted bipartite graph:
+        n - number of vertices in 'left' part
+        m - number of vertices in 'right' part
+        w_min - minimal weight generated
+        w_max - maximal weight generated
+        """
         nx_graph = nx.algorithms.bipartite.random_graph(n, m, random_seed.RANDOM_SEED)
 
         # add random weights
