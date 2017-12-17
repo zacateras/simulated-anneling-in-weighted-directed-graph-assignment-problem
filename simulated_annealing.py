@@ -23,10 +23,13 @@ class CoolingSchemeExponential(CoolingScheme):
     Can be parametrized with a parameter.
     """
     def __init__(self, a):
+        if a <= 0 or a >= 1:
+            raise (Exception, 'A must be a number greater than zero and lower than 1.')
+
         self.A = a
 
     def step(self, t_0, i):
-        return t_0 * math.ldexp(self.A, i)
+        return t_0 * math.pow(self.A, i)
 
 
 class CoolingSchemeLinear(CoolingScheme):
@@ -172,7 +175,7 @@ class SimulatedAnnealing:
 
                 next_s = crnt_s.get_neighbour()
                 next_est = next_s.get_estimate()
-
+                
                 if next_est < crnt_est:
                     crnt_s = next_s
                     crnt_est = next_est
