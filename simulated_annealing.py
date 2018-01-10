@@ -19,7 +19,7 @@ class CoolingScheme:
 class CoolingSchemeExponential(CoolingScheme):
     """
     Exponential Cooling Scheme.
-    Subsequent values are generated according to the T_n(i) = T_0 * a^i formula.
+    Subsequent values are generated according to the T_n(i) = T_0 * a ^ i formula.
     Can be parametrized with a parameter.
     """
     def __init__(self, a):
@@ -35,7 +35,7 @@ class CoolingSchemeExponential(CoolingScheme):
 class CoolingSchemeLinear(CoolingScheme):
     """
     Linear Cooling Scheme.
-    Subsequent values are generated according to the T_n(i) = T_0 * a * i formula.
+    Subsequent values are generated according to the T_n(i) = T_0 - a * i formula.
     Can be parametrized with a parameter.
     """
     def __init__(self, a):
@@ -165,6 +165,7 @@ class SimulatedAnnealing:
         start_time = time.time()
 
         # STEP 1
+        T_0 = parameters.T_max
         t = parameters.T_max
         i_s2 = 0
         i_s3 = 0
@@ -201,10 +202,10 @@ class SimulatedAnnealing:
                             i_s3))
 
                 if i_s2 % parameters.k_t == 0:
-                    break;
+                    break
 
             # STEP 3
-            t = parameters.cooling_scheme.step(t, i_s3)
+            t = parameters.cooling_scheme.step(T_0, i_s3)
 
             if parameters.i_s3_observation_interval is not None and i_s3 % parameters.i_s3_observation_interval == 0:
                 observations.append(
