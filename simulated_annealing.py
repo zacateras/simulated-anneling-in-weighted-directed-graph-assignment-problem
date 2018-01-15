@@ -158,7 +158,8 @@ class SimulatedAnnealing:
     @staticmethod
     def execute(
             nx_graph: nx.Graph,
-            parameters: SimulatedAnnealingParameters):
+            parameters: SimulatedAnnealingParameters,
+            enable_status_printing: bool = False):
 
         observations = []
 
@@ -215,6 +216,9 @@ class SimulatedAnnealing:
                         time.time() - start_time,
                         i_s2,
                         i_s3))
+
+                if enable_status_printing:
+                    print('s3: %s, t: %s' % (i_s3, t))
 
         end_time = time.time()
         total_time = end_time - start_time

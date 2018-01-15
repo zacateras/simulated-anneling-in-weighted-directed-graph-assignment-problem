@@ -16,9 +16,9 @@ class Graph:
         Draws bipartite either the provided weighted graph or the assignment solution if only vertex_tuples collection is provided.
         """
         if not nx.is_bipartite(nx_graph):
-            raise (Exception, 'Provided graph must be bipartite.')
+            raise Exception('Provided graph must be bipartite.')
 
-        l_part, r_part = nx.bipartite.sets(nx_graph)
+        l_part, r_part = Graph.sets_bipartite_nonconnected(nx_graph)
 
         # position bipartite graph
         len_left = len(l_part)
@@ -56,6 +56,20 @@ class Graph:
         plt.show()
 
     @staticmethod
+    def sets_bipartite_nonconnected(nx_graph):
+        """
+        Returns arbitrary bipartite sets - even if a bipartite graph is not connected.
+        """
+        part_1, part_2 = set(), set()
+
+        for nx_subgraph in nx.connected_component_subgraphs(nx_graph):
+            part_1_s, part_2_s = nx.bipartite.sets(nx_subgraph)
+            part_1 = part_1.union(part_1_s)
+            part_2 = part_2.union(part_2_s)
+
+        return part_1, part_2
+
+    @staticmethod
     def subgraph_edges(nx_graph: nx.Graph, vertex_tuples):
         """
         Returns subgraph of the provided graph containing only edges provided as vertex_tuples collection.
@@ -66,7 +80,7 @@ class Graph:
             v_1, v_2 = vertex_tuple[0], vertex_tuple[1]
 
             if not nx_graph.has_edge(v_1, v_2) or 'weight' not in nx_graph[v_1][v_2]:
-                raise (Exception, 'The edge is not present in the provided graph.')
+                raise Exception('The edge is not present in the provided graph.')
 
             nx_subgraph.add_edge(vertex_tuple[0], vertex_tuple[1], weight=nx_graph[v_1][v_2]['weight'])
 

@@ -15,9 +15,9 @@ class Solution:
         self.nxGraph = nx_graph
 
         if not nx.is_bipartite(nx_graph):
-            raise (Exception, 'Provided graph must be bipartite.')
+            raise Exception('Provided graph must be bipartite.')
 
-        part_1, part_2 = nx.bipartite.sets(nx_graph)
+        part_1, part_2 = graph.Graph.sets_bipartite_nonconnected(nx_graph)
         part_1_len, part_2_len = len(part_1), len(part_2)
 
         if part_1_len < part_2_len:
@@ -87,10 +87,10 @@ class Solution:
         If both are disconnected then does not change edges state.
         """
         if idx_g > self.g_part_len:
-            raise (Exception, 'Index 1 must be lower than the number of vertices in greater bipartite.')
+            raise Exception('Index 1 must be lower than the number of vertices in greater bipartite.')
 
         if idx_l > self.l_part_len:
-            raise (Exception, 'Index 2 must be lower than the number of vertices in lesser bipartite.')
+            raise Exception('Index 2 must be lower than the number of vertices in lesser bipartite.')
 
         v_g = self.solution[idx_g] if idx_g < self.l_part_len else self.remaining[idx_g - self.l_part_len]
         v_l = self.solution[idx_l]
