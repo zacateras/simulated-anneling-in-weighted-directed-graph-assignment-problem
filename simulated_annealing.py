@@ -24,7 +24,7 @@ class CoolingSchemeExponential(CoolingScheme):
     """
     def __init__(self, a):
         if a <= 0 or a >= 1:
-            raise (Exception, 'A must be a number greater than zero and lower than 1.')
+            raise RuntimeError('A must be a number greater than zero and lower than 1.')
 
         self.A = a
 
@@ -40,7 +40,7 @@ class CoolingSchemeLinear(CoolingScheme):
     """
     def __init__(self, a):
         if a <= 0:
-            raise (Exception, 'A must be a number greater than zero.')
+            raise RuntimeError('A must be a number greater than zero.')
 
         self.A = a
 
@@ -56,7 +56,7 @@ class CoolingSchemeLogarithmic(CoolingScheme):
     """
     def __init__(self, c, d):
         if c <= 0:
-            raise (Exception, 'C must be a number greater than zero.')
+            raise RuntimeError('C must be a number greater than zero.')
 
         self.C = c
         self.D = d
@@ -72,10 +72,10 @@ class SimulatedAnnealingParameters:
     - t_min - minimum temperature
     - k_t - number of neighbour solutions checked in each iteration
     - cooling_scheme - type of a cooling scheme - one of Exponential, Logarithmic, Linear
-    - i_s2_observation_interval - interval of generating observations (expressed in number of neighbour solution checked)
-    - i_s3_observation_interval - interval of generating observations (expressed in number of temperature updates)
+    - i_s2_observation_interval - interval of generating observations (expressed in number of neighbour solution checked, turn off with passing None)
+    - i_s3_observation_interval - interval of generating observations (expressed in number of temperature updates, turn off with passing None)
     """
-    def __init__(self, t_max, t_min, k_t, cooling_scheme: CoolingScheme, i_s2_observation_interval=None, i_s3_observation_interval=None):
+    def __init__(self, t_max, t_min, k_t, cooling_scheme: CoolingScheme, i_s2_observation_interval=1, i_s3_observation_interval=1):
         self.T_max = t_max
         self.T_min = t_min
         self.k_t = k_t
@@ -89,14 +89,16 @@ class SimulatedAnnealingObservation:
     One observation of the simulation state:
     - category of an observation (identifier of a source)
     - current solution evaluation value
-    - t - number of total iterations
+    - t - temperature
+    - time_elapsed - time elapsed since the beginning of calculation
     - i_s2 - total number of neighbour solution checks
     - i_s3 - total number of temperature updates
     """
-    def __init__(self, category, evaluation, t, i_s2, i_s3):
+    def __init__(self, category, evaluation, t, time_elapsed, i_s2, i_s3):
         self.category = category
         self.evaluation = evaluation
         self.t = t
+        self.time_elapsed = time_elapsed
         self.i_s2 = i_s2
         self.i_s3 = i_s3
 
@@ -122,18 +124,31 @@ class SimulatedAnnealingResult:
         self.solution.draw()
 
     def draw_observations_plot(self):
-        f, axarr = plt.subplots(1, 2)
+        f, axarr = plt.subplots(1, 4)
 
         x_s3 = [obs.i_s3 for obs in filter(lambda x: x.category is 's3', self.observations)]
         y_s3 = [obs.evaluation for obs in filter(lambda x: x.category is 's3', self.observations)]
+
         axarr[0].plot(x_s3, y_s3)
-        axarr[0].set_title('Each iteration')
+        axarr[0].set_title('Each iteration (value)')
+
+        y_s3 = [obs.t for obs in filter(lambda x: x.category is 's3', self.observations)]
+
+        axarr[1].plot(x_s3, y_s3)
+        axarr[1].set_title('Each iteration (temperature)')
 
         x_s2 = [obs.i_s2 for obs in filter(lambda x: x.category is 's2', self.observations)]
         y_s2 = [obs.evaluation for obs in filter(lambda x: x.category is 's2', self.observations)]
-        axarr[1].plot(x_s2, y_s2)
-        axarr[1].set_title('Each neighbour')
 
+        axarr[2].plot(x_s2, y_s2)
+        axarr[2].set_title('Each neighbour')
+
+        y_s2 = [obs.t for obs in filter(lambda x: x.category is 's2', self.observations)]
+        
+        axarr[3].plot(x_s2, y_s2)
+        axarr[3].set_title('Each neighbour (temperature)')
+
+        f.set_size_inches(20, 4)
         plt.show()
 
 
@@ -180,17 +195,17 @@ class SimulatedAnnealing:
             while True:
                 i_s2 += 1
 
-                next_s = crnt_s.get_neighbour()
-                next_est = next_s.get_estimate()
+                next_idx_g, next_idx_l = crnt_s.get_neighbour_transition()
+                next_est = crnt_s.get_neighbour_estimate(next_idx_g, next_idx_l)
 
                 # prevent overflows
-                e_d = (next_est - crnt_est) / t
+                e_d = - (next_est - crnt_est) / t
 
                 if next_est < crnt_est:
-                    crnt_s = next_s
+                    crnt_s.change_edge(next_idx_g, next_idx_l)
                     crnt_est = next_est
-                elif e_d < 709 and random.random() > math.exp(e_d):
-                    crnt_s = next_s
+                elif e_d < 709 and random.random() < math.exp(e_d):
+                    crnt_s.change_edge(next_idx_g, next_idx_l)
                     crnt_est = next_est
 
                 if parameters.i_s2_observation_interval is not None and i_s2 % parameters.i_s2_observation_interval == 0:
@@ -198,6 +213,7 @@ class SimulatedAnnealing:
                         SimulatedAnnealingObservation(
                             's2',
                             crnt_est,
+                            t,
                             time.time() - start_time,
                             i_s2,
                             i_s3))
@@ -213,6 +229,7 @@ class SimulatedAnnealing:
                     SimulatedAnnealingObservation(
                         's3',
                         crnt_est,
+                        t,
                         time.time() - start_time,
                         i_s2,
                         i_s3))
